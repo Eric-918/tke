@@ -847,14 +847,11 @@ func (t *TKE) initProviderConfig() error {
 		return err
 	}
 	c.Registry.Prefix = t.Para.Config.Registry.Prefix()
-	if t.Para.Config.Registry.ThirdPartyRegistry == nil &&
-		t.Para.Config.Registry.TKERegistry != nil {
-		ip := t.Cluster.Spec.Machines[0].IP
-		if t.Para.Config.HA != nil {
-			ip = t.Para.Config.HA.VIP()
-		}
-		c.Registry.IP = ip
+	ip, err := util.GetExternalIP()
+	if err != nil {
+		return pkgerrors.Wrap(err, "get external ip error")
 	}
+	c.Registry.IP = ip
 
 	return c.Save(pluginConfigFile)
 }
@@ -1196,42 +1193,6 @@ func (t *TKE) setupLocalRegistry() error {
 	}
 	t.log.Print(string(data))
 
-	// for pull image from local registry on node
-	ip, err := util.GetExternalIP()
-	if err != nil {
-		return pkgerrors.Wrap(err, "get external ip error")
-	}
-	err = t.injectRemoteHosts([]string{t.Para.Config.Registry.Domain()}, ip)
-	if err != nil {
-		return pkgerrors.Wrap(err, "inject remote hosts error")
-	}
-
-	return nil
-}
-
-func (t *TKE) injectRemoteHosts(host []string, ip string) error {
-	for _, machine := range t.Cluster.Spec.Machines {
-		sshConfig := &ssh.Config{
-			User:       machine.Username,
-			Host:       machine.IP,
-			Port:       int(machine.Port),
-			Password:   string(machine.Password),
-			PrivateKey: machine.PrivateKey,
-			PassPhrase: machine.PassPhrase,
-		}
-		s, err := ssh.New(sshConfig)
-		if err != nil {
-			return err
-		}
-		for _, one := range host {
-			remoteHosts := hosts.RemoteHosts{Host: one, SSH: s}
-			err = remoteHosts.Set(ip)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
@@ -1367,6 +1328,24 @@ func (t *TKE) prepareCertificates() error {
 }
 
 func (t *TKE) prepareBaremetalProviderConfig() error {
+	c, err := baremetalconfig.New(pluginConfigFile)
+	if err != nil {
+		return err
+	}
+	if t.Para.Config.Registry.ThirdPartyRegistry == nil &&
+		t.Para.Config.Registry.TKERegistry != nil {
+		ip := t.Cluster.Spec.Machines[0].IP
+		if t.Para.Config.HA != nil {
+			ip = t.Para.Config.HA.VIP()
+		}
+		c.Registry.IP = ip
+	}
+
+	err = c.Save(pluginConfigFile)
+	if err != nil {
+		return err
+	}
+
 	configMaps := []struct {
 		Name string
 		File string
