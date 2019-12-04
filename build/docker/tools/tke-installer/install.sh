@@ -64,12 +64,16 @@ function install_docker() {
 
   systemctl daemon-reload
 
-  if ! systemctl start docker; then
-    echo "can't start docker, please check docker service."
-    exit 1
-  fi
-  if ! systemctl is-active --quiet docker; then
-    echo "docker status is not running, please check docker service."
+  # becuase first start docker may be restart some times
+  : systemctl start docker
+  for i in {1..60}; do
+    if systemctl is-active --quiet docker; then
+      break
+    fi
+    sleep 1
+  done
+  if (( i == 10)); then
+    echo "start docker failed, please check docker service."
     exit 1
   fi
 
