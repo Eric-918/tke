@@ -42,6 +42,7 @@ var _ = Describe("bootstrap", func() {
 	var nodes []cloudprovider.Instance
 	var nodesSSH []ssh.Interface
 	var provider cloudprovider.Provider
+	needDelete := false
 
 	BeforeEach(func() {
 		var err error
@@ -51,9 +52,7 @@ var _ = Describe("bootstrap", func() {
 
 		nodesSSH = make([]ssh.Interface, len(nodes))
 		for i, one := range nodes {
-			fmt.Printf("create instance %d %s\n", i, one.InternalIP)
-
-			By("ensure ssh is ready")
+			fmt.Printf("ensure ssh %d %s is ready\n", i, one.InternalIP)
 			s, err := ssh.New(&ssh.Config{
 				User:     one.Username,
 				Password: one.Password,
@@ -73,6 +72,9 @@ var _ = Describe("bootstrap", func() {
 	})
 
 	AfterEach(func() {
+		if !needDelete {
+			return
+		}
 		var instanceIDs []*string
 		for i, one := range nodes {
 			fmt.Printf("delete instance %d %s\n", i, one.InternalIP)
@@ -84,8 +86,9 @@ var _ = Describe("bootstrap", func() {
 
 	It("should bootstrap successfuly", func() {
 		By("install installer")
-		cmd := fmt.Sprintf("yum install docker -y && systemctl start docker && curl -s https://tke-release-1251707795.cos.ap-guangzhou.myqcloud.com/tools/run.sh | sh -s %s",
-			os.Getenv("VERSION"))
+		version := os.Getenv("VERSION")
+		cmd := fmt.Sprintf("wget https://tke-release-1251707795.cos.ap-guangzhou.myqcloud.com/tke-installer-x86_64-%s.run && chmod +x tke-installer-x86_64-%s.run && ./tke-installer-x86_64-%s.run",
+			version, version, version)
 		_, err := nodesSSH[0].CombinedOutput(cmd)
 		Expect(err).To(BeNil())
 
@@ -119,7 +122,7 @@ var _ = Describe("bootstrap", func() {
 		Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 
 		By("wait install finish")
-		err = wait.PollImmediate(5*time.Second, 10*time.Minute, func() (bool, error) {
+		err = wait.PollImmediate(5*time.Second, 30*time.Minute, func() (bool, error) {
 			url := fmt.Sprintf("http://%s:8080/api/cluster/global/progress", nodes[0].InternalIP)
 			resp, err := http.Get(url)
 			if err != nil {
@@ -143,5 +146,6 @@ var _ = Describe("bootstrap", func() {
 			}
 		})
 		Expect(err).To(BeNil())
+		needDelete = true
 	})
 })

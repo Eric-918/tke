@@ -34,8 +34,9 @@ SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 function usage() {
   cat <<EOF
 Usage: ${0} Release TKE
-  -h, --help  help
-  -q, --quick quick release
+  -h, help
+  -q, quick release
+  -t, tke release
 EOF
 }
 
@@ -66,7 +67,6 @@ function prepare_tke_installer() {
 
 function build_installer_image() {
   docker build --pull -t "$REGISTRY_PREFIX"/tke-installer:"$VERSION" -f "$SCRIPT_DIR"/Dockerfile "$DST_DIR"
-  docker push "$REGISTRY_PREFIX"/tke-installer:"$VERSION"
 }
 
 function build_installer() {
@@ -76,16 +76,26 @@ function build_installer() {
     cp build/docker/tools/tke-installer/{build.sh,init_installer.sh,install.sh} $installer_dir/
     cp "$DST_DIR"/provider/baremetal/res/docker-18.09.9.tgz $installer_dir/res/docker.tgz
     cp pkg/platform/provider/baremetal/conf/docker/docker.service $installer_dir/res/
-    docker save $REGISTRY_PREFIX/tke-installer:$VERSION | gzip -c $installer_dir/res/tke-install.tgz
+    docker save $REGISTRY_PREFIX/tke-installer:$VERSION | gzip -c > $installer_dir/res/tke-install.tgz
 
     sed -i "s;VERSION=.*;VERSION=$VERSION;g" $installer_dir/install.sh
 
     $installer_dir/build.sh $INSTALLER
-    coscmd upload $INSTALLER $INSTALLER
+    cp $installer_dir/$INSTALLER $OUTPUT_DIR
+
+    echo "build tke-installer success! OUTPUT => $OUTPUT_DIR/$INSTALLER"
+
+    if [[ "${BUILDER}" == "tke" ]]; then
+      coscmd upload $INSTALLER $INSTALLER
+    fi
 }
 
 function prepare_images() {
-  make push VERSION="$VERSION"
+  if [[ "${BUILDER}" == "tke" ]]; then
+      make push VERSION="$VERSION"
+  else
+      make image VERSION="$VERSION"
+  fi
 
   GENERATE_IMAGES_BIN="$OUTPUT_DIR"/$(go env GOOS)/$(go env GOARCH)/tke-generate-images
   make build BINS=tke-generate-images VERSION="$VERSION"
