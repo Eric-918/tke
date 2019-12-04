@@ -1150,6 +1150,9 @@ func (t *TKE) loadImages() error {
 			continue
 		}
 		nameAndTag := strings.Split(imageNames[1], ":")
+		if nameAndTag[0] == "tke-installer" { // no need to push installer image for speed up
+			continue
+		}
 		if nameAndTag[1] == "<none>" {
 			t.log.Printf("skip invalid tag:name=%s", image)
 			continue
@@ -1955,9 +1958,6 @@ func (t *TKE) pushImages() error {
 	for i, image := range tkeImages {
 		nameAndTag := strings.Split(image, ":")
 		if len(nameAndTag) != 2 {
-			continue
-		}
-		if nameAndTag[0] == "tke-installer" { // no need to push installer image for speed up
 			continue
 		}
 		if nameAndTag[1] == "<none>" {

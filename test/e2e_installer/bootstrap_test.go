@@ -53,6 +53,7 @@ var _ = Describe("bootstrap", func() {
 		for i, one := range nodes {
 			fmt.Printf("create instance %d %s\n", i, one.InternalIP)
 
+			By("ensure ssh is ready")
 			s, err := ssh.New(&ssh.Config{
 				User:     one.Username,
 				Password: one.Password,
@@ -60,6 +61,13 @@ var _ = Describe("bootstrap", func() {
 				Port:     int(one.Port),
 			})
 			Expect(err).To(BeNil())
+			for j := 1; j <= 10; j++ {
+				err = s.Ping()
+				if err == nil {
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
 			nodesSSH[i] = s
 		}
 	})
