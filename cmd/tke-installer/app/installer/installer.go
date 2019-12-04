@@ -185,6 +185,10 @@ func (r *Registry) Namespace() string {
 	return r.TKERegistry.Namespace
 }
 
+func (r *Registry) Prefix() string {
+	return path.Join(r.Domain(), r.Namespace())
+}
+
 type TKERegistry struct {
 	Domain    string `json:"domain" validate:"hostname_rfc1123"`
 	Namespace string `json:"namespace"`
@@ -842,7 +846,7 @@ func (t *TKE) initProviderConfig() error {
 	if err != nil {
 		return err
 	}
-	c.Registry.Domain = t.Para.Config.Registry.Domain()
+	c.Registry.Prefix = t.Para.Config.Registry.Prefix()
 	if t.Para.Config.Registry.ThirdPartyRegistry == nil &&
 		t.Para.Config.Registry.TKERegistry != nil {
 		ip := t.Cluster.Spec.Machines[0].IP
