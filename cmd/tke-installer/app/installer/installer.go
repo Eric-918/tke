@@ -928,42 +928,6 @@ func (t *TKE) findClusterProgress(request *restful.Request, response *restful.Re
 	if apiStatus != nil {
 		response.WriteHeaderAndJson(int(apiStatus.Status().Code), apiStatus.Status(), restful.MIME_JSON)
 	} else {
-		if t.process.Status == StatusSuccess {
-			if t.Para.Config.Gateway != nil {
-				var host string
-				if t.Para.Config.Gateway.Domain != "" {
-					host = t.Para.Config.Gateway.Domain
-				} else if t.Para.Config.HA != nil {
-					host = t.Para.Config.HA.VIP()
-				} else {
-					host = t.Para.Cluster.Spec.Machines[0].IP
-				}
-				t.process.URL = fmt.Sprintf("http://%s", host)
-
-				t.process.Username = t.Para.Config.Basic.Username
-				t.process.Password = t.Para.Config.Basic.Password
-
-				if t.Para.Config.Gateway.Cert.SelfSignedCert != nil {
-					t.process.CACert, _ = ioutil.ReadFile(constants.CACrtFile)
-				}
-
-				if t.Para.Config.Gateway.Domain != "" {
-					t.process.Hosts = append(t.process.Hosts, t.Para.Config.Gateway.Domain)
-				}
-
-				cfg, _ := t.getKubeconfig()
-				t.process.Kubeconfig, _ = runtime.Encode(clientcmdlatest.Codec, cfg)
-			}
-
-			if t.Para.Config.Registry.TKERegistry != nil {
-				t.process.Hosts = append(t.process.Hosts, t.Para.Config.Registry.TKERegistry.Domain)
-			}
-
-			t.process.Servers = t.servers
-			if t.Para.Config.HA != nil {
-				t.process.Servers = append(t.process.Servers, t.Para.Config.HA.VIP())
-			}
-		}
 		response.WriteEntity(t.process)
 	}
 }
@@ -999,6 +963,40 @@ func (t *TKE) do() {
 	}
 
 	t.process.Status = StatusSuccess
+	if t.Para.Config.Gateway != nil {
+		var host string
+		if t.Para.Config.Gateway.Domain != "" {
+			host = t.Para.Config.Gateway.Domain
+		} else if t.Para.Config.HA != nil {
+			host = t.Para.Config.HA.VIP()
+		} else {
+			host = t.Para.Cluster.Spec.Machines[0].IP
+		}
+		t.process.URL = fmt.Sprintf("http://%s", host)
+
+		t.process.Username = t.Para.Config.Basic.Username
+		t.process.Password = t.Para.Config.Basic.Password
+
+		if t.Para.Config.Gateway.Cert.SelfSignedCert != nil {
+			t.process.CACert, _ = ioutil.ReadFile(constants.CACrtFile)
+		}
+
+		if t.Para.Config.Gateway.Domain != "" {
+			t.process.Hosts = append(t.process.Hosts, t.Para.Config.Gateway.Domain)
+		}
+
+		cfg, _ := t.getKubeconfig()
+		t.process.Kubeconfig, _ = runtime.Encode(clientcmdlatest.Codec, cfg)
+	}
+
+	if t.Para.Config.Registry.TKERegistry != nil {
+		t.process.Hosts = append(t.process.Hosts, t.Para.Config.Registry.TKERegistry.Domain)
+	}
+
+	t.process.Servers = t.servers
+	if t.Para.Config.HA != nil {
+		t.process.Servers = append(t.process.Servers, t.Para.Config.HA.VIP())
+	}
 	t.log.Printf("===>install task [Sucesss] [%fs]", time.Since(start).Seconds())
 }
 
