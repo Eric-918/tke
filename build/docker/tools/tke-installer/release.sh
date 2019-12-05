@@ -25,7 +25,7 @@ VERSION=${VERSION:-$(git describe --dirty --always --tags | sed 's/-/./g')}
 INSTALLER=tke-installer-x86_64-$VERSION.run
 PROVIDER_RES_VERSION=v1.14.6-1
 K8S_VERION=${PROVIDER_RES_VERSION%-*}
-OUTPUT_DIR=_output/
+OUTPUT_DIR=_output
 DST_DIR=$(mktemp -d)
 #DST_DIR="/var/folders/20/n4jpmhjs0hd9hjxg80yr2nww0000gn/T/tmp.uN71o6ID"
 echo "$DST_DIR" || exit
@@ -71,17 +71,19 @@ function build_installer_image() {
 
 function build_installer() {
     installer_dir=$(mktemp -d)
+    echo "installer dir: $installer_dir" || exit
+
     mkdir -p $installer_dir/res
 
-    cp build/docker/tools/tke-installer/{build.sh,init_installer.sh,install.sh} $installer_dir/
-    cp "$DST_DIR"/provider/baremetal/res/docker-18.09.9.tgz $installer_dir/res/docker.tgz
-    cp pkg/platform/provider/baremetal/conf/docker/docker.service $installer_dir/res/
-    docker save $REGISTRY_PREFIX/tke-installer:$VERSION | gzip -c > $installer_dir/res/tke-install.tgz
+    cp -v build/docker/tools/tke-installer/{build.sh,init_installer.sh,install.sh} $installer_dir/
+    cp -v "$DST_DIR"/provider/baremetal/res/docker-18.09.9.tgz $installer_dir/res/docker.tgz
+    cp -v pkg/platform/provider/baremetal/conf/docker/docker.service $installer_dir/res/
+    docker save $REGISTRY_PREFIX/tke-installer:$VERSION | gzip -c > $installer_dir/res/tke-installer.tgz
 
     sed -i "s;VERSION=.*;VERSION=$VERSION;g" $installer_dir/install.sh
 
     $installer_dir/build.sh $INSTALLER
-    cp $installer_dir/$INSTALLER $OUTPUT_DIR
+    cp -v $installer_dir/$INSTALLER $OUTPUT_DIR
 
     echo "build tke-installer success! OUTPUT => $OUTPUT_DIR/$INSTALLER"
 

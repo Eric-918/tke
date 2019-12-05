@@ -29,13 +29,13 @@ unset LD_LIBRARY_PATH
 
 export PATH='/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
-currPath=$(cd $(dirname $0); pwd)
 target=${1:-tke-installer}
 
-echo "===> Begin to create $target"
+cd $(dirname $0)
+
+echo "===> Begin to create $target in $(pwd)"
 
 echo "Step.1 cleanup"
-cd $(dirname $0)
 rm -f $target
 
 echo "Step.2 prepare package"
