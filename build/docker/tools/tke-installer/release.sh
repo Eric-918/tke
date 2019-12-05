@@ -132,3 +132,4 @@ if [[ "${quick}" == "false" ]]; then
 fi
 
 build_installer_image
+build_installer
