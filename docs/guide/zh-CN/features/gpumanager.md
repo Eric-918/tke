@@ -4,11 +4,11 @@
 
 GPU Manager提供一个All-in-One的GPU管理器, 基于Kubernets Device Plugin插件系统实现, 该管理器提供了分配并共享GPU, GPU指标查询, 容器运行前的GPU相关设备准备等功能, 支持用户在Kubernetes集群中使用GPU设备。
 
-管理器包含如下功能:
+GPUManager包含如下功能:
 
-- **拓扑分配**：提供基于GPU拓扑分配功能, 当用户分配超过1张GPU卡的的应用, 可以选择拓扑连接最快的方式分配GPU设备
+- **拓扑分配**：提供基于GPU拓扑分配功能, 当用户分配超过1张GPU卡的的应用, 可以选择拓扑连接最优的组合分配GPU设备
 
-- **GPU共享**：允许用户提交小于1张卡资源的的任务, 并提供QoS保证
+- **GPU共享**：允许用户提交小于1张卡资源的的任务,实现多容器共享同一张卡，并提供QoS保证
 
 - **应用GPU指标的查询**：用户可以访问主机的端口(默认为5678)的/metrics路径,可以为Prometheus提供GPU指标的收集功能, /usage路径可以提供可读性的容器状况查询
 
@@ -23,7 +23,7 @@ GPU Manager提供一个All-in-One的GPU管理器, 基于Kubernets Device Plugin�
 
 ## GPU-Manager使用场景
 
-在Kubernetes集群中运行GPU应用时, 可以解决AI训练等场景中申请独立卡造成资源浪费的情况，让计算资源得到充分利用。
+在Kubernetes集群中运行GPU应用时, 可以解决AI训练、推理等场景中申请独立卡造成资源浪费的情况，让计算资源得到充分利用。
 
 ## GPU-Manager限制条件
 
@@ -35,7 +35,7 @@ GPU Manager提供一个All-in-One的GPU管理器, 基于Kubernets Device Plugin�
 
 ## GPU-Manager使用方法
 
-1. 安装GPU-Manager扩展组件
+1. 在TKEStack扩展插件中安装GPU-Manager扩展组件
 
 2. 在安装了GPU-Manager扩展组件的集群中，创建工作负载。
 
@@ -45,7 +45,9 @@ GPU Manager提供一个All-in-One的GPU管理器, 基于Kubernets Device Plugin�
 
 ### yaml创建
 
-如果使用yaml创建工作负载，提交的时候需要在yaml为容器设置GPU的的使用资源, 核资源需要在resource上填写`tencent.com/vcuda-core`, 显存资源需要在resource上填写`tencent.com/vcuda-memory`,
+如果使用yaml创建工作负载，提交的时候需要在yaml为容器设置GPU的的使用资源
+核资源需要在resource上填写`tencent.com/vcuda-core`
+显存资源需要在resource上填写`tencent.com/vcuda-memory`
 
 - 使用1张卡
 
