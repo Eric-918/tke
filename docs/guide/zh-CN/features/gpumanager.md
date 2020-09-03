@@ -43,7 +43,7 @@ GPUManager包含如下功能:
 
 4. 创建工作负载设置GPU限制，如图：
 
-5. ![](https://main.qcloudimg.com/raw/c06872ddc0fafbf92345c0d9f26e4ecd.png)
+![](https://main.qcloudimg.com/raw/c06872ddc0fafbf92345c0d9f26e4ecd.png)
 
 ### yaml创建
 
