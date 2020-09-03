@@ -35,13 +35,15 @@ GPUManager包含如下功能:
 
 ## GPU-Manager使用方法
 
-1. 在TKEStack扩展插件中安装GPU-Manager扩展组件
+1. 集群部署时选择vGPU, 平台会为集群部署GPUManager插件负载
 
-2. 在安装了GPU-Manager扩展组件的集群中，创建工作负载。
+2. 添加GPU节点时勾选GPU选项，平台会为节点安装GPU驱动
 
-3. 创建工作负载设置GPU限制，如图：
+3. 在安装了GPU-Manager扩展组件的集群中，创建工作负载。
 
-4. ![](https://main.qcloudimg.com/raw/c06872ddc0fafbf92345c0d9f26e4ecd.png)
+4. 创建工作负载设置GPU限制，如图：
+
+5. ![](https://main.qcloudimg.com/raw/c06872ddc0fafbf92345c0d9f26e4ecd.png)
 
 ### yaml创建
 
@@ -61,13 +63,15 @@ kind: Pod
 
 spec:
 
-containers:
+  containers:
 
-- name: gpu
+    - name: gpu
 
-resources:
-
-tencent.com/vcuda-core: 100
+      resources:
+        limits: 
+          tencent.com/vcuda-core: 100
+        requests:
+          tencent.com/vcuda-core: 100
 ```
 
 - 使用0.3张卡, 5GiB显存的应用（20*256MB）
@@ -82,13 +86,15 @@ kind: Pod
 
 spec:
 
-containers:
+  containers:
 
-- name: gpu
+  - name: gpu
 
-resources:
-
-tencent.com/vcuda-core: 30
-
-tencent.com/vcuda-memory: 20
+    resources:
+      limits:
+        tencent.com/vcuda-core: 30
+        tencent.com/vcuda-memory: 20
+      requests:
+        tencent.com/vcuda-core: 30
+        tencent.com/vcuda-memory: 20
 ```
